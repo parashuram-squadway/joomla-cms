@@ -9,6 +9,17 @@
 
 defined('_JEXEC') or die;
 
-JHtml::_('behavior.modal');
+// Setup the modal options
+$options = array();
+$options['url']    = JRoute::_('index.php?option=com_languages&view=multilangstatus&tmpl=component');
+$options['height'] = 300;
+$options['width']  = 700;
+$options['title']  = JText::_('MOD_MULTILANGSTATUS');
+
 ?>
-<div class="btn-group multilanguage"><a class="modal" href="<?php echo JRoute::_('index.php?option=com_languages&view=multilangstatus&tmpl=component');?>" rel="{handler:'iframe', size:{x:700,y:300}}"><i class="icon-comment"></i> <?php echo JText::_('MOD_MULTILANGSTATUS');?></a></div>
+<div class="btn-group multilanguage">
+	<?php echo JHtml::_('bootstrap.renderModal', 'modal-multilang', $options); ?>
+	<a class="modal" data-toggle="modal" data-target="#modal-multilang">
+		<i class="icon-comment"></i><?php echo JText::_('MOD_MULTILANGSTATUS');?>
+	</a>
+</div>
