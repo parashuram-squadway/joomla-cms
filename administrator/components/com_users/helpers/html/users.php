@@ -87,13 +87,13 @@ class JHtmlUsers
 	 * Displays a note icon.
 	 *
 	 * @param   integer  $count   The number of notes for the user
-	 * @param   integer  $userId  The user ID
+	 * @param   array    $user    The user ID and name
 	 *
 	 * @return	string  A link to a modal window with the user notes
 	 *
 	 * @since   2.5
 	 */
-	public static function notes($count, $userId)
+	public static function notes($count, $user)
 	{
 		if (empty($count))
 		{
@@ -102,9 +102,15 @@ class JHtmlUsers
 
 		$title = JText::plural('COM_USERS_N_USER_NOTES', $count);
 
-		return '<a class="modal"' .
-			' href="' . JRoute::_('index.php?option=com_users&view=notes&tmpl=component&layout=modal&u_id=' . (int) $userId) . '"' .
-			' rel="{handler: \'iframe\', size: {x: 800, y: 450}}">' .
+		// Setup the modal options
+		$options = array();
+		$options['url']    = JRoute::_('index.php?option=com_users&view=notes&tmpl=component&layout=modal&u_id=' . (int) $user[0]);
+		$options['height'] = 400;
+		$options['width']  = 500;
+		$options['title']  = JText::sprintf('COM_USERS_NOTES_FOR_USER', $user[1], $user[0]);
+		$modal = JHtml::_('bootstrap.renderModal', 'modal-notes-user' . $user[0], $options);
+
+		return $modal . '<a class="modal" data-toggle="modal" data-target="#modal-notes-user' . $user[0] . '">' .
 			'<span class="label label-info"><i class="icon-drawer-2"></i>' . $title . '</span></a>';
 	}
 }

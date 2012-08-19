@@ -12,7 +12,6 @@ defined('_JEXEC') or die;
 // Load the tooltip behavior.
 JHtml::_('behavior.tooltip');
 JHtml::_('behavior.multiselect');
-JHtml::_('behavior.modal');
 JHtml::_('jquery.chosen');
 
 $canDo = UsersHelper::getActions();
