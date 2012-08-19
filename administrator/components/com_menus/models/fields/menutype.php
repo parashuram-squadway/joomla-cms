@@ -65,11 +65,17 @@ class JFormFieldMenutype extends JFormFieldList
 				$value	= JText::_(JArrayHelper::getValue($rlu, MenusHelper::getLinkKey($link)));
 				break;
 		}
-		// Load the javascript and css
-		JHtml::_('behavior.framework');
-		JHtml::_('behavior.modal');
 
-		$html[] = '<span class="input-append"><input type="text" readonly="readonly" disabled="disabled" value="'.$value.'"'.$size.$class.' /><a class="btn btn-primary" onclick="SqueezeBox.fromElement(this, {handler:\'iframe\', size: {x: 600, y: 450}, url:\''.JRoute::_('index.php?option=com_menus&view=menutypes&tmpl=component&recordId='.$recordId).'\'})"><i class="icon-list icon-white"></i> '.JText::_('JSELECT').'</a></span>';
+		// Set up the modal
+		$options = array();
+		$options['url']    = JRoute::_('index.php?option=com_menus&view=menutypes&tmpl=component&recordId=' . $recordId);
+		$options['height'] = 600;
+		$options['width']  = 450;
+		$options['title']  = JText::_('COM_MENUS_ITEM_FIELD_TYPE_LABEL');
+		$modal = JHtml::_('bootstrap.renderModal', 'modal-menuitems', $options);
+
+		$html[] = '<span class="input-append"><input type="text" readonly="readonly" disabled="disabled" value="' . $value . '"' . $size . $class . ' />' . $modal;
+		$html[] = '<a class="btn modal" data-toggle="modal" data-target="#modal-menuitems"><i class="icon-list icon-white"></i> ' . JText::_('JSELECT') . '</a></span>';
 		$html[] = '<input class="input-small" type="hidden" name="' . $this->name . '" value="'.htmlspecialchars($this->value, ENT_COMPAT, 'UTF-8') . '" />';
 
 		return implode("\n", $html);
