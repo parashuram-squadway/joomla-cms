@@ -329,6 +329,36 @@ class PlgFinderCategories extends FinderIndexerAdapter
 	}
 
 	/**
+	 * Method to get the number of content items available to index.
+	 *
+	 * @return  integer  The number of content items available to index.
+	 *
+	 * @since   3.0
+	 * @throws  Exception on database error.
+	 */
+	protected function getContentCount()
+	{
+		// Build the count query
+		$query = $this->db->getQuery(true);
+		$query->select('COUNT(*)');
+		$query->from($this->db->quoteName($this->table));
+		$query->where($this->db->quoteName('id') . ' > 1');
+
+		// Get the total number of content items to index.
+		$this->db->setQuery($query);
+		$return = (int) $this->db->loadResult();
+
+		// Check for a database error.
+		if ($this->db->getErrorNum())
+		{
+			// Throw database error exception.
+			throw new Exception($this->db->getErrorMsg(), 500);
+		}
+
+		return $return;
+	}
+
+	/**
 	 * Method to get the SQL query used to retrieve the list of content items.
 	 *
 	 * @param   mixed  $sql  A JDatabaseQuery object or null.

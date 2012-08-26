@@ -501,28 +501,13 @@ abstract class FinderIndexerAdapter extends JPlugin
 	 */
 	protected function getContentCount()
 	{
-		$return = 0;
-
-		// Get the list query.
-		$sql = $this->getListQuery();
-
-		// Check if the query is valid.
-		if (empty($sql))
-		{
-			return $return;
-		}
-
-		// Tweak the SQL query to make the total lookup faster.
-		if ($sql instanceof JDatabaseQuery)
-		{
-			$sql = clone($sql);
-			$sql->clear('select');
-			$sql->select('COUNT(*)');
-			$sql->clear('order');
-		}
+		// Build the count query
+		$query = $this->db->getQuery(true);
+		$query->select('COUNT(*)');
+		$query->from($this->db->quoteName($this->table));
 
 		// Get the total number of content items to index.
-		$this->db->setQuery($sql);
+		$this->db->setQuery($query);
 		$return = (int) $this->db->loadResult();
 
 		return $return;
