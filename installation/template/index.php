@@ -10,16 +10,11 @@ defined('_JEXEC') or die;
 
 $doc = JFactory::getDocument();
 
-// Add Stylesheets
-$doc->addStyleSheet('../media/jui/css/bootstrap.css');
-$doc->addStyleSheet('../media/jui/css/bootstrap-extended.css');
-$doc->addStyleSheet('../media/jui/css/bootstrap-responsive.css');
+// Add Stylesheet
 $doc->addStyleSheet('template/css/template.css');
 
-if ($this->direction === 'rtl')
-{
-	$doc->addStyleSheet('../media/jui/css/bootstrap-rtl.css');
-}
+// Load optional rtl Bootstrap css and Bootstrap bugfixes
+JHtml::_('bootstrap.loadcss', false, $this->direction);
 
 // Load the JavaScript behaviors
 JHtml::_('bootstrap.framework');
