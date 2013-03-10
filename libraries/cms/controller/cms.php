@@ -1,6 +1,6 @@
 <?php
 /**
- * @package     Joomla.Legacy
+ * @package     Joomla.Libraries
  * @subpackage  Controller
  *
  * @copyright   Copyright (C) 2005 - 2013 Open Source Matters, Inc. All rights reserved.
@@ -10,23 +10,30 @@
 defined('JPATH_PLATFORM') or die;
 
 /**
- * Base class for a Joomla Controller
+ * Base controller for the Joomla! CMS
  *
  * Controller (Controllers are where you put all the actual code.) Provides basic
  * functionality, such as rendering views (aka displaying templates).
  *
- * @package     Joomla.Legacy
+ * @package     Joomla.Libraries
  * @subpackage  Controller
- * @since       12.2
+ * @since       4.0
  */
-class JControllerLegacy extends JObject
+abstract class JControllerCms
 {
+	/**
+	 * The application object.
+	 *
+	 * @var    JApplicationBase
+	 * @since  4.0
+	 */
+	protected $app;
+
 	/**
 	 * The base path of the controller
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _basePath.
+	 * @since  4.0
 	 */
 	protected $basePath;
 
@@ -34,7 +41,7 @@ class JControllerLegacy extends JObject
 	 * The default view for the display method.
 	 *
 	 * @var    string
-	 * @since  12.2
+	 * @since  4.0
 	 */
 	protected $default_view;
 
@@ -42,17 +49,32 @@ class JControllerLegacy extends JObject
 	 * The mapped task that was performed.
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _doTask.
+	 * @since  4.0
 	 */
 	protected $doTask;
+
+	/**
+	 * Hold a JInput object for easier access to the input variables.
+	 *
+	 * @var    JInput
+	 * @since  4.0
+	 */
+	protected $input;
+
+	/**
+	 * Controller instance.
+	 *
+	 * @var         JControllerCms
+	 * @since       4.0
+	 * @deprecated  5.0
+	 */
+	protected static $instance;
 
 	/**
 	 * Redirect message.
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _message.
+	 * @since  4.0
 	 */
 	protected $message;
 
@@ -60,52 +82,48 @@ class JControllerLegacy extends JObject
 	 * Redirect message type.
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _messageType.
+	 * @since  4.0
 	 */
-	protected $messageType;
+	protected $messageType = 'message';
 
 	/**
 	 * Array of class methods
 	 *
 	 * @var    array
-	 * @since  12.2
-	 * @note   Replaces _methods.
+	 * @since  4.0
 	 */
-	protected $methods;
-
-	/**
-	 * The name of the controller
-	 *
-	 * @var    array
-	 * @since  12.2
-	 * @note   Replaces _name.
-	 */
-	protected $name;
+	protected $methods = array();
 
 	/**
 	 * The prefix of the models
 	 *
-	 * @var    string
-	 * @since  12.2
+	 * @var         string
+	 * @since       4.0
+	 * @deprecated  5.0  Use $this->name for the extension class prefix
 	 */
 	protected $model_prefix;
+
+	/**
+	 * The name of the controller, used as the prefix for extension classes
+	 *
+	 * @var    array
+	 * @since  4.0
+	 */
+	protected $name;
 
 	/**
 	 * The set of search directories for resources (views).
 	 *
 	 * @var    array
-	 * @since  12.2
-	 * @note   Replaces _path.
+	 * @since  4.0
 	 */
-	protected $paths;
+	protected $paths = array();
 
 	/**
 	 * URL for redirection.
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _redirect.
+	 * @since  4.0
 	 */
 	protected $redirect;
 
@@ -113,8 +131,7 @@ class JControllerLegacy extends JObject
 	 * Current or most recently performed task.
 	 *
 	 * @var    string
-	 * @since  12.2
-	 * @note   Replaces _task.
+	 * @since  4.0
 	 */
 	protected $task;
 
@@ -122,26 +139,138 @@ class JControllerLegacy extends JObject
 	 * Array of class methods to call for a given task.
 	 *
 	 * @var    array
-	 * @since  12.2
-	 * @note   Replaces _taskMap.
+	 * @since  4.0
 	 */
-	protected $taskMap;
+	protected $taskMap = array();
 
 	/**
-	 * Hold a JInput object for easier access to the input variables.
+	 * Constructor.
 	 *
-	 * @var    JInput
-	 * @since  12.2
+	 * @param   array             $config  An optional associative array of configuration settings.
+	 *                                     Recognized key values include 'name', 'default_task', 'model_path', and
+	 *                                     'view_path' (this list is not meant to be comprehensive).
+	 * @param   JInput            $input   The input object.
+	 * @param   JApplicationBase  $app     The application object.
+	 *
+	 * @since   4.0
 	 */
-	protected $input;
+	public function __construct($config = array(), JInput $input = null, JApplicationBase $app = null)
+	{
+		// Enable logging if debug mode is active
+		if (defined('JDEBUG') && JDEBUG)
+		{
+			JLog::addLogger(array('text_file' => 'jcontroller.log.php'), JLog::ALL, array('controller'));
+		}
 
-	/**
-	 * Instance container.
-	 *
-	 * @var    JControllerLegacy
-	 * @since  12.2
-	 */
-	protected static $instance;
+		// Setup dependencies.
+		$this->app   = isset($app) ? $app : $this->loadApplication();
+		$this->input = isset($input) ? $input : $this->loadInput();
+
+		// Determine the methods to exclude from the base class.
+		$xMethods = get_class_methods('JControllerCms');
+
+		// Get the public methods in this class using reflection.
+		$r = new ReflectionClass($this);
+		$rMethods = $r->getMethods(ReflectionMethod::IS_PUBLIC);
+
+		foreach ($rMethods as $rMethod)
+		{
+			$mName = $rMethod->getName();
+
+			// Add default display method if not explicitly declared.
+			if (!in_array($mName, $xMethods) || $mName == 'display')
+			{
+				$this->methods[] = strtolower($mName);
+
+				// Auto register the methods as tasks.
+				$this->taskMap[strtolower($mName)] = $mName;
+			}
+		}
+
+		// Set the view name
+		if (empty($this->name))
+		{
+			if (array_key_exists('name', $config))
+			{
+				$this->name = $config['name'];
+			}
+			else
+			{
+				$this->name = $this->getName();
+			}
+		}
+
+		// Set a base path for use by the controller
+		// @deprecated  5.0  Extensions should autoload their classes
+		if (array_key_exists('base_path', $config))
+		{
+			$this->basePath = $config['base_path'];
+		}
+		else
+		{
+			$this->basePath = JPATH_COMPONENT;
+		}
+
+		// If the default task is set, register it as such
+		if (array_key_exists('default_task', $config))
+		{
+			$this->registerDefaultTask($config['default_task']);
+		}
+		else
+		{
+			$this->registerDefaultTask('display');
+		}
+
+		// Set the models prefix
+		// @deprecated  5.0  Use $this->name instead
+		if (empty($this->model_prefix))
+		{
+			if (array_key_exists('model_prefix', $config))
+			{
+				// User-defined prefix
+				$this->model_prefix = $config['model_prefix'];
+			}
+			else
+			{
+				$this->model_prefix = $this->name . 'Model';
+			}
+		}
+
+		// Set the default model search path
+		// @deprecated  5.0  Extensions should autoload their classes
+		if (array_key_exists('model_path', $config))
+		{
+			// User-defined dirs
+			$this->addModelPath($config['model_path'], $this->model_prefix);
+		}
+		else
+		{
+			$this->addModelPath($this->basePath . '/models', $this->model_prefix);
+		}
+
+		// Set the default view search path
+		// @deprecated  5.0  Extensions should autoload their classes
+		if (array_key_exists('view_path', $config))
+		{
+			// User-defined dirs
+			$this->setPath('view', $config['view_path']);
+		}
+		else
+		{
+			$this->setPath('view', $this->basePath . '/views');
+		}
+
+		// Set the default view.
+		if (array_key_exists('default_view', $config))
+		{
+			$this->default_view = $config['default_view'];
+		}
+		elseif (empty($this->default_view))
+		{
+			$this->default_view = $this->getName();
+		}
+
+	}
 
 	/**
 	 * Adds to the stack of model paths in LIFO order.
@@ -150,10 +279,64 @@ class JControllerLegacy extends JObject
 	 * @param   string  $prefix  A prefix for models
 	 *
 	 * @return  void
+	 *
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should autoload their classes
 	 */
 	public static function addModelPath($path, $prefix = '')
 	{
 		JModelLegacy::addIncludePath($path, $prefix);
+	}
+
+	/**
+	 * Adds to the search path for templates and resources.
+	 *
+	 * @param   string  $type  The path type (e.g. 'model', 'view').
+	 * @param   mixed   $path  The directory string  or stream array to search.
+	 *
+	 * @return  JControllerCms  A JControllerCms instance to support chaining.
+	 *
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should autoload their classes
+	 */
+	protected function addPath($type, $path)
+	{
+		// Just force path to array
+		settype($path, 'array');
+
+		if (!isset($this->paths[$type]))
+		{
+			$this->paths[$type] = array();
+		}
+
+		// Loop through the path directories
+		foreach ($path as $dir)
+		{
+			// No surrounding spaces allowed!
+			$dir = rtrim(JPath::check($dir, '/'), '/') . '/';
+
+			// Add to the top of the search dirs
+			array_unshift($this->paths[$type], $dir);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Add one or more view paths to the controller's stack, in LIFO order.
+	 *
+	 * @param   mixed  $path  The directory (string) or list of directories (array) to add.
+	 *
+	 * @return  JControllerCms  This object to support chaining.
+	 *
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should autoload their classes
+	 */
+	public function addViewPath($path)
+	{
+		$this->addPath('view', $path);
+
+		return $this;
 	}
 
 	/**
@@ -164,8 +347,8 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  string  The filename.
 	 *
-	 * @note    Replaced _createFileName.
-	 * @since   12.2
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should autoload their classes
 	 */
 	protected static function createFileName($type, $parts = array())
 	{
@@ -211,21 +394,270 @@ class JControllerLegacy extends JObject
 	}
 
 	/**
+	 * Method to check whether an ID is in the edit list.
+	 *
+	 * @param   string   $context  The context for the session storage.
+	 * @param   integer  $id       The ID of the record to add to the edit list.
+	 *
+	 * @return  boolean  True if the ID is in the edit list.
+	 *
+	 * @since   4.0
+	 */
+	protected function checkEditId($context, $id)
+	{
+		if ($id)
+		{
+			$values = (array) $this->app->getUserState($context . '.id');
+
+			$result = in_array((int) $id, $values);
+
+			if (defined('JDEBUG') && JDEBUG)
+			{
+				JLog::add(
+					sprintf(
+						'Checking edit ID %s.%s: %d %s',
+						$context,
+						$id,
+						(int) $result,
+						str_replace("\n", ' ', print_r($values, 1))
+					),
+					JLog::INFO,
+					'controller'
+				);
+			}
+
+			return $result;
+		}
+		else
+		{
+			// No id for a new item.
+			return true;
+		}
+	}
+
+	/**
+	 * Method to load and return a model object.
+	 *
+	 * @param   string  $name    The name of the model.
+	 * @param   string  $prefix  Optional model prefix.
+	 * @param   array   $config  Configuration array for the model. Optional.
+	 *
+	 * @return  mixed   Model object on success; otherwise null failure.
+	 *
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should directly instantiate models
+	 */
+	protected function createModel($name, $prefix = '', $config = array())
+	{
+		// Clean the model name
+		$modelName = preg_replace('/[^A-Z0-9_]/i', '', $name);
+		$classPrefix = preg_replace('/[^A-Z0-9_]/i', '', $prefix);
+
+		$result = JModelLegacy::getInstance($modelName, $classPrefix, $config);
+
+		return $result;
+	}
+
+	/**
+	 * Method to load and return a view object. This method first looks in the
+	 * current template directory for a match and, failing that, uses a default
+	 * set path to load the view class file.
+	 *
+	 * Note the "name, prefix, type" order of parameters, which differs from the
+	 * "name, type, prefix" order used in related public methods.
+	 *
+	 * @param   string  $name    The name of the view.
+	 * @param   string  $prefix  Optional prefix for the view class name.
+	 * @param   string  $type    The type of view.
+	 * @param   array   $config  Configuration array for the view. Optional.
+	 *
+	 * @return  mixed  View object on success; null or error result on failure.
+	 *
+	 * @since   4.0
+	 * @throws  Exception if view class does not exist
+	 */
+	protected function createView($name, $prefix = '', $type = '', $config = array())
+	{
+		// Clean the view name
+		$viewName    = preg_replace('/[^A-Z0-9_]/i', '', $name);
+		$classPrefix = preg_replace('/[^A-Z0-9_]/i', '', $prefix);
+		$viewType    = preg_replace('/[^A-Z0-9_]/i', '', $type);
+
+		// Build the view class name in new format, e.g. ContentViewArticleHtml
+		$viewClass = ucfirst($classPrefix) . ucfirst($viewName) . ucfirst($viewType);
+
+		if (!class_exists($viewClass))
+		{
+			// Build the view class name in legacy format, e.g. ContentViewArticle, and load the proper file type
+			// @deprecated  5.0  Legacy view class support will be dropped, views should be converted
+			$viewClass = $classPrefix . $viewName;
+
+			jimport('joomla.filesystem.path');
+			$path = JPath::find($this->paths['view'], $this->createFileName('view', array('name' => $viewName, 'type' => $viewType)));
+
+			if ($path)
+			{
+				require_once $path;
+
+				if (!class_exists($viewClass))
+				{
+					throw new Exception(JText::sprintf('JLIB_APPLICATION_ERROR_VIEW_CLASS_NOT_FOUND', $viewClass, $path), 500);
+				}
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		return new $viewClass($config);
+	}
+
+	/**
+	 * Typical view method for MVC based architecture
+	 *
+	 * This function is provide as a default implementation, in most cases
+	 * you will need to override it in your own controllers.
+	 *
+	 * @param   boolean  $cachable   If true, the view output will be cached
+	 * @param   array    $urlparams  An array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
+	 *
+	 * @return  JControllerCms  A JControllerCms instance to support chaining.
+	 *
+	 * @since   4.0
+	 */
+	public function display($cachable = false, $urlparams = array())
+	{
+		$document   = JFactory::getDocument();
+		$viewType   = $document->getType();
+		$viewName   = $this->input->get('view', $this->default_view);
+		$viewLayout = $this->input->get('layout', 'default');
+
+		$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
+
+		// Get/Create the model
+		if ($model = $this->getModel($viewName))
+		{
+			// Push the model into the view (as default)
+			$view->setModel($model, true);
+		}
+
+		$view->document = $document;
+
+		$conf = JFactory::getConfig();
+
+		// Display the view
+		if ($cachable && $viewType != 'feed' && $conf->get('caching') >= 1)
+		{
+			$option = $this->input->get('option');
+			$cache = JFactory::getCache($option, 'view');
+
+			if (is_array($urlparams))
+			{
+				if (!empty($this->app->registeredurlparams))
+				{
+					$registeredurlparams = $this->app->registeredurlparams;
+				}
+				else
+				{
+					$registeredurlparams = new stdClass;
+				}
+
+				foreach ($urlparams as $key => $value)
+				{
+					// Add your safe url parameters with variable type as value {@see JFilterInput::clean()}.
+					$registeredurlparams->$key = $value;
+				}
+
+				$this->app->registeredurlparams = $registeredurlparams;
+			}
+
+			$cache->get($view, 'display');
+		}
+		else
+		{
+			$view->display();
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Execute a task by triggering a method in the derived class.
+	 *
+	 * @param   string  $task  The task to perform. If no matching task is found, the '__default' task is executed, if defined.
+	 *
+	 * @return  mixed   The value returned by the called method, false in error case.
+	 *
+	 * @since   4.0
+	 * @throws  Exception
+	 */
+	public function execute($task)
+	{
+		$this->task = $task;
+
+		$task = strtolower($task);
+
+		if (isset($this->taskMap[$task]))
+		{
+			$doTask = $this->taskMap[$task];
+		}
+		elseif (isset($this->taskMap['__default']))
+		{
+			$doTask = $this->taskMap['__default'];
+		}
+		else
+		{
+			throw new Exception(JText::sprintf('JLIB_APPLICATION_ERROR_TASK_NOT_FOUND', $task), 404);
+		}
+
+		// Record the actual task being fired
+		$this->doTask = $doTask;
+
+		return $this->$doTask();
+	}
+
+	/**
+	 * Get the application object.
+	 *
+	 * @return  JApplicationBase  The application object.
+	 *
+	 * @since   4.0
+	 */
+	public function getApplication()
+	{
+		return $this->app;
+	}
+
+	/**
+	 * Get the input object.
+	 *
+	 * @return  JInput  The input object.
+	 *
+	 * @since   4.0
+	 */
+	public function getInput()
+	{
+		return $this->input;
+	}
+
+	/**
 	 * Method to get a singleton controller instance.
 	 *
 	 * @param   string  $prefix  The prefix for the controller.
 	 * @param   array   $config  An array of optional constructor options.
 	 *
-	 * @return  JControllerLegacy
+	 * @return  JControllerCms
 	 *
-	 * @since   12.2
-	 * @throws  Exception if the controller cannot be loaded.
+	 * @since       4.0
+	 * @deprecated  5.0  Extensions should directly instantiate their controllers
+	 * @throws      InvalidArgumentException if the controller cannot be loaded.
 	 */
 	public static function getInstance($prefix, $config = array())
 	{
-		if (is_object(self::$instance))
+		if (static::$instance instanceof JControllerCms)
 		{
-			return self::$instance;
+			return static::$instance;
 		}
 
 		$input = JFactory::getApplication()->input;
@@ -297,429 +729,14 @@ class JControllerLegacy extends JObject
 		// Instantiate the class.
 		if (class_exists($class))
 		{
-			self::$instance = new $class($config);
+			static::$instance = new $class($config);
 		}
 		else
 		{
 			throw new InvalidArgumentException(JText::sprintf('JLIB_APPLICATION_ERROR_INVALID_CONTROLLER_CLASS', $class));
 		}
 
-		return self::$instance;
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param   array  $config  An optional associative array of configuration settings.
-	 * Recognized key values include 'name', 'default_task', 'model_path', and
-	 * 'view_path' (this list is not meant to be comprehensive).
-	 *
-	 * @since   12.2
-	 */
-	public function __construct($config = array())
-	{
-		$this->methods = array();
-		$this->message = null;
-		$this->messageType = 'message';
-		$this->paths = array();
-		$this->redirect = null;
-		$this->taskMap = array();
-
-		if (defined('JDEBUG') && JDEBUG)
-		{
-			JLog::addLogger(array('text_file' => 'jcontroller.log.php'), JLog::ALL, array('controller'));
-		}
-
-		$this->input = JFactory::getApplication()->input;
-
-		// Determine the methods to exclude from the base class.
-		$xMethods = get_class_methods('JControllerLegacy');
-
-		// Get the public methods in this class using reflection.
-		$r = new ReflectionClass($this);
-		$rMethods = $r->getMethods(ReflectionMethod::IS_PUBLIC);
-
-		foreach ($rMethods as $rMethod)
-		{
-			$mName = $rMethod->getName();
-
-			// Add default display method if not explicitly declared.
-			if (!in_array($mName, $xMethods) || $mName == 'display')
-			{
-				$this->methods[] = strtolower($mName);
-
-				// Auto register the methods as tasks.
-				$this->taskMap[strtolower($mName)] = $mName;
-			}
-		}
-
-		// Set the view name
-		if (empty($this->name))
-		{
-			if (array_key_exists('name', $config))
-			{
-				$this->name = $config['name'];
-			}
-			else
-			{
-				$this->name = $this->getName();
-			}
-		}
-
-		// Set a base path for use by the controller
-		if (array_key_exists('base_path', $config))
-		{
-			$this->basePath = $config['base_path'];
-		}
-		else
-		{
-			$this->basePath = JPATH_COMPONENT;
-		}
-
-		// If the default task is set, register it as such
-		if (array_key_exists('default_task', $config))
-		{
-			$this->registerDefaultTask($config['default_task']);
-		}
-		else
-		{
-			$this->registerDefaultTask('display');
-		}
-
-		// Set the models prefix
-		if (empty($this->model_prefix))
-		{
-			if (array_key_exists('model_prefix', $config))
-			{
-				// User-defined prefix
-				$this->model_prefix = $config['model_prefix'];
-			}
-			else
-			{
-				$this->model_prefix = $this->name . 'Model';
-			}
-		}
-
-		// Set the default model search path
-		if (array_key_exists('model_path', $config))
-		{
-			// User-defined dirs
-			$this->addModelPath($config['model_path'], $this->model_prefix);
-		}
-		else
-		{
-			$this->addModelPath($this->basePath . '/models', $this->model_prefix);
-		}
-
-		// Set the default view search path
-		if (array_key_exists('view_path', $config))
-		{
-			// User-defined dirs
-			$this->setPath('view', $config['view_path']);
-		}
-		else
-		{
-			$this->setPath('view', $this->basePath . '/views');
-		}
-
-		// Set the default view.
-		if (array_key_exists('default_view', $config))
-		{
-			$this->default_view = $config['default_view'];
-		}
-		elseif (empty($this->default_view))
-		{
-			$this->default_view = $this->getName();
-		}
-
-	}
-
-	/**
-	 * Adds to the search path for templates and resources.
-	 *
-	 * @param   string  $type  The path type (e.g. 'model', 'view').
-	 * @param   mixed   $path  The directory string  or stream array to search.
-	 *
-	 * @return  JControllerLegacy  A JControllerLegacy object to support chaining.
-	 *
-	 * @since   12.2
-	 * @note    Replaces _addPath.
-	 */
-	protected function addPath($type, $path)
-	{
-		// Just force path to array
-		settype($path, 'array');
-
-		if (!isset($this->paths[$type]))
-		{
-			$this->paths[$type] = array();
-		}
-
-		// Loop through the path directories
-		foreach ($path as $dir)
-		{
-			// No surrounding spaces allowed!
-			$dir = rtrim(JPath::check($dir, '/'), '/') . '/';
-
-			// Add to the top of the search dirs
-			array_unshift($this->paths[$type], $dir);
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Add one or more view paths to the controller's stack, in LIFO order.
-	 *
-	 * @param   mixed  $path  The directory (string) or list of directories (array) to add.
-	 *
-	 * @return  JControllerLegacy  This object to support chaining.
-	 */
-	public function addViewPath($path)
-	{
-		$this->addPath('view', $path);
-
-		return $this;
-	}
-
-	/**
-	 * Authorisation check
-	 *
-	 * @param   string  $task  The ACO Section Value to check access on.
-	 *
-	 * @return  boolean  True if authorised
-	 *
-	 * @since   12.2
-	 * @deprecated  13.3  Use JAccess instead.
-	 */
-	public function authorise($task)
-	{
-		JLog::add(__METHOD__ . ' is deprecated. Use JAccess instead.', JLog::WARNING, 'deprecated');
-
-		return true;
-	}
-
-	/**
-	 * Method to check whether an ID is in the edit list.
-	 *
-	 * @param   string   $context  The context for the session storage.
-	 * @param   integer  $id       The ID of the record to add to the edit list.
-	 *
-	 * @return  boolean  True if the ID is in the edit list.
-	 *
-	 * @since   12.2
-	 */
-	protected function checkEditId($context, $id)
-	{
-		if ($id)
-		{
-			$app = JFactory::getApplication();
-			$values = (array) $app->getUserState($context . '.id');
-
-			$result = in_array((int) $id, $values);
-
-			if (defined('JDEBUG') && JDEBUG)
-			{
-				JLog::add(
-					sprintf(
-						'Checking edit ID %s.%s: %d %s',
-						$context,
-						$id,
-						(int) $result,
-						str_replace("\n", ' ', print_r($values, 1))
-					),
-					JLog::INFO,
-					'controller'
-				);
-			}
-
-			return $result;
-		}
-		else
-		{
-			// No id for a new item.
-			return true;
-		}
-	}
-
-	/**
-	 * Method to load and return a model object.
-	 *
-	 * @param   string  $name    The name of the model.
-	 * @param   string  $prefix  Optional model prefix.
-	 * @param   array   $config  Configuration array for the model. Optional.
-	 *
-	 * @return  mixed   Model object on success; otherwise null failure.
-	 *
-	 * @since   12.2
-	 * @note    Replaces _createModel.
-	 */
-	protected function createModel($name, $prefix = '', $config = array())
-	{
-		// Clean the model name
-		$modelName = preg_replace('/[^A-Z0-9_]/i', '', $name);
-		$classPrefix = preg_replace('/[^A-Z0-9_]/i', '', $prefix);
-
-		$result = JModelLegacy::getInstance($modelName, $classPrefix, $config);
-
-		return $result;
-	}
-
-	/**
-	 * Method to load and return a view object. This method first looks in the
-	 * current template directory for a match and, failing that, uses a default
-	 * set path to load the view class file.
-	 *
-	 * Note the "name, prefix, type" order of parameters, which differs from the
-	 * "name, type, prefix" order used in related public methods.
-	 *
-	 * @param   string  $name    The name of the view.
-	 * @param   string  $prefix  Optional prefix for the view class name.
-	 * @param   string  $type    The type of view.
-	 * @param   array   $config  Configuration array for the view. Optional.
-	 *
-	 * @return  mixed  View object on success; null or error result on failure.
-	 *
-	 * @since   12.2
-	 * @note    Replaces _createView.
-	 * @throws  Exception
-	 */
-	protected function createView($name, $prefix = '', $type = '', $config = array())
-	{
-		// Clean the view name
-		$viewName = preg_replace('/[^A-Z0-9_]/i', '', $name);
-		$classPrefix = preg_replace('/[^A-Z0-9_]/i', '', $prefix);
-		$viewType = preg_replace('/[^A-Z0-9_]/i', '', $type);
-
-		// Build the view class name
-		$viewClass = $classPrefix . $viewName;
-
-		if (!class_exists($viewClass))
-		{
-			jimport('joomla.filesystem.path');
-			$path = JPath::find($this->paths['view'], $this->createFileName('view', array('name' => $viewName, 'type' => $viewType)));
-
-			if ($path)
-			{
-				require_once $path;
-
-				if (!class_exists($viewClass))
-				{
-					throw new Exception(JText::sprintf('JLIB_APPLICATION_ERROR_VIEW_CLASS_NOT_FOUND', $viewClass, $path), 500);
-				}
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		return new $viewClass($config);
-	}
-
-	/**
-	 * Typical view method for MVC based architecture
-	 *
-	 * This function is provide as a default implementation, in most cases
-	 * you will need to override it in your own controllers.
-	 *
-	 * @param   boolean  $cachable   If true, the view output will be cached
-	 * @param   array    $urlparams  An array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
-	 *
-	 * @return  JControllerLegacy  A JControllerLegacy object to support chaining.
-	 *
-	 * @since   12.2
-	 */
-	public function display($cachable = false, $urlparams = array())
-	{
-		$document = JFactory::getDocument();
-		$viewType = $document->getType();
-		$viewName = $this->input->get('view', $this->default_view);
-		$viewLayout = $this->input->get('layout', 'default');
-
-		$view = $this->getView($viewName, $viewType, '', array('base_path' => $this->basePath, 'layout' => $viewLayout));
-
-		// Get/Create the model
-		if ($model = $this->getModel($viewName))
-		{
-			// Push the model into the view (as default)
-			$view->setModel($model, true);
-		}
-
-		$view->document = $document;
-
-		$conf = JFactory::getConfig();
-
-		// Display the view
-		if ($cachable && $viewType != 'feed' && $conf->get('caching') >= 1)
-		{
-			$option = $this->input->get('option');
-			$cache = JFactory::getCache($option, 'view');
-
-			if (is_array($urlparams))
-			{
-				$app = JFactory::getApplication();
-
-				if (!empty($app->registeredurlparams))
-				{
-					$registeredurlparams = $app->registeredurlparams;
-				}
-				else
-				{
-					$registeredurlparams = new stdClass;
-				}
-
-				foreach ($urlparams as $key => $value)
-				{
-					// Add your safe url parameters with variable type as value {@see JFilterInput::clean()}.
-					$registeredurlparams->$key = $value;
-				}
-
-				$app->registeredurlparams = $registeredurlparams;
-			}
-
-			$cache->get($view, 'display');
-		}
-		else
-		{
-			$view->display();
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Execute a task by triggering a method in the derived class.
-	 *
-	 * @param   string  $task  The task to perform. If no matching task is found, the '__default' task is executed, if defined.
-	 *
-	 * @return  mixed   The value returned by the called method, false in error case.
-	 *
-	 * @since   12.2
-	 * @throws  Exception
-	 */
-	public function execute($task)
-	{
-		$this->task = $task;
-
-		$task = strtolower($task);
-		if (isset($this->taskMap[$task]))
-		{
-			$doTask = $this->taskMap[$task];
-		}
-		elseif (isset($this->taskMap['__default']))
-		{
-			$doTask = $this->taskMap['__default'];
-		}
-		else
-		{
-			throw new Exception(JText::sprintf('JLIB_APPLICATION_ERROR_TASK_NOT_FOUND', $task), 404);
-		}
-
-		// Record the actual task being fired
-		$this->doTask = $doTask;
-
-		return $this->$doTask();
+		return static::$instance;
 	}
 
 	/**
@@ -729,9 +746,9 @@ class JControllerLegacy extends JObject
 	 * @param   string  $prefix  The class prefix. Optional.
 	 * @param   array   $config  Configuration array for model. Optional.
 	 *
-	 * @return  object  The model.
+	 * @return  JModel  The model.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function getModel($name = '', $prefix = '', $config = array())
 	{
@@ -742,7 +759,7 @@ class JControllerLegacy extends JObject
 
 		if (empty($prefix))
 		{
-			$prefix = $this->model_prefix;
+			$prefix = $this->getName() . 'Model';
 		}
 
 		if ($model = $this->createModel($name, $prefix, $config))
@@ -750,9 +767,8 @@ class JControllerLegacy extends JObject
 			// Task is a reserved state
 			$model->setState('task', $this->task);
 
-			// Let's get the application object and set menu information if it's available
-			$app = JFactory::getApplication();
-			$menu = $app->getMenu();
+			// Set menu information if available to the application
+			$menu = $this->app->getMenu();
 
 			if (is_object($menu))
 			{
@@ -776,7 +792,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  string  The name of the dispatcher
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 * @throws  Exception
 	 */
 	public function getName()
@@ -799,7 +815,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  string  The task that is being performed or was most recently performed.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function getTask()
 	{
@@ -811,7 +827,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  array  Array[i] of task names.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function getTasks()
 	{
@@ -828,7 +844,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  JViewLegacy  Reference to the view or an error.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 * @throws  Exception
 	 */
 	public function getView($name = '', $type = '', $prefix = '', $config = array())
@@ -873,19 +889,18 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  void
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	protected function holdEditId($context, $id)
 	{
-		$app = JFactory::getApplication();
-		$values = (array) $app->getUserState($context . '.id');
+		$values = (array) $this->app->getUserState($context . '.id');
 
 		// Add the id to the list if non-zero.
 		if (!empty($id))
 		{
 			array_push($values, (int) $id);
 			$values = array_unique($values);
-			$app->setUserState($context . '.id', $values);
+			$this->app->setUserState($context . '.id', $values);
 
 			if (defined('JDEBUG') && JDEBUG)
 			{
@@ -904,18 +919,41 @@ class JControllerLegacy extends JObject
 	}
 
 	/**
+	 * Load the application object.
+	 *
+	 * @return  JApplicationBase  The application object.
+	 *
+	 * @since   4.0
+	 */
+	protected function loadApplication()
+	{
+		return JFactory::getApplication();
+	}
+
+	/**
+	 * Load the input object.
+	 *
+	 * @return  JInput  The input object.
+	 *
+	 * @since   4.0
+	 */
+	protected function loadInput()
+	{
+		return $this->app->input;
+	}
+
+	/**
 	 * Redirects the browser or returns false if no redirect is set.
 	 *
 	 * @return  boolean  False if no redirect exists.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function redirect()
 	{
 		if ($this->redirect)
 		{
-			$app = JFactory::getApplication();
-			$app->redirect($this->redirect, $this->message, $this->messageType);
+			$this->app->redirect($this->redirect, $this->message, $this->messageType);
 		}
 
 		return false;
@@ -926,9 +964,9 @@ class JControllerLegacy extends JObject
 	 *
 	 * @param   string  $method  The name of the method in the derived class to perform if a named task is not found.
 	 *
-	 * @return  JControllerLegacy  A JControllerLegacy object to support chaining.
+	 * @return  JControllerCms  A JControllerCms instance to support chaining.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function registerDefaultTask($method)
 	{
@@ -943,9 +981,9 @@ class JControllerLegacy extends JObject
 	 * @param   string  $task    The task.
 	 * @param   string  $method  The name of the method in the derived class to perform for this task.
 	 *
-	 * @return  JControllerLegacy  A JControllerLegacy object to support chaining.
+	 * @return  JControllerCms  A JControllerCms instance to support chaining.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function registerTask($task, $method)
 	{
@@ -958,22 +996,6 @@ class JControllerLegacy extends JObject
 	}
 
 	/**
-	 * Unregister (unmap) a task in the class.
-	 *
-	 * @param   string  $task  The task.
-	 *
-	 * @return  JControllerLegacy  This object to support chaining.
-	 *
-	 * @since   12.2
-	 */
-	public function unregisterTask($task)
-	{
-		unset($this->taskMap[strtolower($task)]);
-
-		return $this;
-	}
-
-	/**
 	 * Method to check whether an ID is in the edit list.
 	 *
 	 * @param   string   $context  The context for the session storage.
@@ -981,7 +1003,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  void
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	protected function releaseEditId($context, $id)
 	{
@@ -1020,7 +1042,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  string  Previous message
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function setMessage($text, $type = 'message')
 	{
@@ -1039,8 +1061,7 @@ class JControllerLegacy extends JObject
 	 *
 	 * @return  void
 	 *
-	 * @note    Replaces _setPath.
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	protected function setPath($type, $path)
 	{
@@ -1058,9 +1079,9 @@ class JControllerLegacy extends JObject
 	 * @param   string  $msg   Message to display on redirect. Optional, defaults to value set internally by controller, if any.
 	 * @param   string  $type  Message type. Optional, defaults to 'message' or the type set by a previous call to setMessage.
 	 *
-	 * @return  JControllerLegacy  This object to support chaining.
+	 * @return  JControllerCms  This object to support chaining.
 	 *
-	 * @since   12.2
+	 * @since   4.0
 	 */
 	public function setRedirect($url, $msg = null, $type = null)
 	{
@@ -1084,6 +1105,22 @@ class JControllerLegacy extends JObject
 		{
 			$this->messageType = $type;
 		}
+
+		return $this;
+	}
+
+	/**
+	 * Unregister (unmap) a task in the class.
+	 *
+	 * @param   string  $task  The task.
+	 *
+	 * @return  JControllerCms  This object to support chaining.
+	 *
+	 * @since   4.0
+	 */
+	public function unregisterTask($task)
+	{
+		unset($this->taskMap[strtolower($task)]);
 
 		return $this;
 	}
