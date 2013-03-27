@@ -6,7 +6,7 @@
  * @category  Classes
  * @package   Joomla.CodeSniffer
  * @author    Nikolai Plath
- * @license   GNU General Public License version 2 or later
+ * @version   CVS: $Id: InstantiateNewClassesSniff.php 508 2011-08-29 08:53:08Z elkuku $
  */
 
 /**
