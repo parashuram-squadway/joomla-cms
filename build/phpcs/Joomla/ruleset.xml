@@ -10,13 +10,15 @@
  <!-- Exclude the index.html files. -->
  <exclude-pattern>*/index.html</exclude-pattern>
 
- <!-- Exclude folders not containing production code -->
+ <!-- Exclude folders not containing production or PHP code -->
  <exclude-pattern>/build/*</exclude-pattern>
  <exclude-pattern>/docs/*</exclude-pattern>
  <exclude-pattern>/tests/*</exclude-pattern>
  <exclude-pattern>/cache/*</exclude-pattern>
  <exclude-pattern>/tmp/*</exclude-pattern>
  <exclude-pattern>/logs/*</exclude-pattern>
+ <exclude-pattern>/media/*</exclude-pattern>
+ <exclude-pattern>/images/*</exclude-pattern>
 
  <!-- Exclude 3rd party libraries. -->
  <exclude-pattern>/libraries/phputf8/*</exclude-pattern>
@@ -43,13 +45,6 @@
 
  <rule ref="Generic.Files.LineEndings"/>
  <rule ref="Generic.Files.LineLength">
-	 <!-- These exceptions are temporary -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/libraries/*</exclude-pattern>
-  <exclude-pattern>/includes/*</exclude-pattern>
   <!-- These exceptions are permanent -->
   <exclude-pattern>*/tmpl/*</exclude-pattern>
   <exclude-pattern>/templates/*</exclude-pattern>
@@ -71,13 +66,7 @@
  <rule ref="PEAR.Formatting.MultiLineAssignment"/>
 
  <rule ref="Generic.Functions.FunctionCallArgumentSpacing"/>
- <rule ref="PEAR.Functions.ValidDefaultValue">
-  <!-- These exceptions are temporary for now -->
-  <exclude-pattern>/administrator/components/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/libraries/cms/*</exclude-pattern>
- </rule>
+ <rule ref="PEAR.Functions.ValidDefaultValue"/>
 
  <rule ref="PEAR.NamingConventions.ValidClassName">
   <!-- These exceptions are temporary for now -->
@@ -91,21 +80,14 @@
 
  <rule ref="Squiz.Operators.IncrementDecrementUsage">
   <exclude name="Squiz.Operators.IncrementDecrementUsage.processAssignment"/>
-  <!-- These exceptions are temporary -->
-  <exclude-pattern>/administrator/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
  </rule>
 
  <rule ref="Squiz.Scope.StaticThisUsage"/>
 
  <rule ref="Squiz.WhiteSpace.ScopeClosingBrace">
- <!-- These exceptions are temporary -->
-  <exclude-pattern>/administrator/components/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/templates/*</exclude-pattern>
+ <!-- These exceptions are permanent -->
   <exclude-pattern>/layouts/*</exclude-pattern>
+  <exclude-pattern>/templates/*</exclude-pattern>
   <exclude-pattern>*/tmpl/*</exclude-pattern>
  </rule>
 
@@ -131,61 +113,17 @@
 
  <!-- Remove the following when the folder limitations are dropped -->
 
- <rule ref="Joomla.Classes.MethodScope">
-  <!-- We only want this for libraries, language and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
- </rule>
+ <rule ref="Joomla.Classes.MethodScope"/>
 
- <rule ref="Joomla.Commenting.FunctionComment">
-  <!-- We only want this for libraries, language and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/templates/*</exclude-pattern>
-  <exclude-pattern>/layouts/*</exclude-pattern>
-  <exclude-pattern>/includes/*</exclude-pattern>
- </rule>
+ <rule ref="Joomla.Commenting.FunctionComment"/>
 
- <rule ref="Joomla.Commenting.SingleComment">
-  <!-- We only want this for libraries, language and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/templates/*</exclude-pattern>
-  <exclude-pattern>/layouts/*</exclude-pattern>
-  <exclude-pattern>/includes/*</exclude-pattern>
- </rule>
+ <rule ref="Joomla.Commenting.SingleComment"/>
 
- <rule ref="Joomla.Commenting.ClassComment">
-  <!-- We exclude components and modules for now -->
-  <exclude-pattern>/administrator/components/*</exclude-pattern>
-  <exclude-pattern>/administrator/modules/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
- </rule>
+ <rule ref="Joomla.Commenting.ClassComment"/>
 
- <rule ref="Joomla.WhiteSpace.ConcatenationSpacing">
-  <!-- We only want this for libraries, language and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/templates/*</exclude-pattern>
-  <exclude-pattern>/layouts/*</exclude-pattern>
-  <exclude-pattern>/includes/*</exclude-pattern>
- </rule>
+ <rule ref="Joomla.WhiteSpace.ConcatenationSpacing"/>
 
  <rule ref="Joomla.ControlStructures.ControlSignature">
-  <!-- We only want this for libraries, languages and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
-  <exclude-pattern>/includes/*</exclude-pattern>
   <!-- These exceptions are permanent -->
   <exclude-pattern>*/tmpl/*</exclude-pattern>
   <exclude-pattern>/templates/*</exclude-pattern>
@@ -194,9 +132,6 @@
  </rule>
 
  <rule ref="Joomla.ControlStructures.InlineControlStructure">
-  <!-- These exceptions are temporary -->
-  <exclude-pattern>/administrator/components/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
   <!-- These exceptions are permanent -->
   <exclude-pattern>*/tmpl/*</exclude-pattern>
   <exclude-pattern>/templates/*</exclude-pattern>
@@ -205,11 +140,6 @@
  </rule>
 
  <rule ref="Joomla.ControlStructures.MultiLineCondition">
-  <!-- We only want this for libraries, language and cli for now -->
-  <exclude-pattern>/administrator/*</exclude-pattern>
-  <exclude-pattern>/components/*</exclude-pattern>
-  <exclude-pattern>/plugins/*</exclude-pattern>
-  <exclude-pattern>/modules/*</exclude-pattern>
   <!-- These exceptions are permanent -->
   <exclude-pattern>*/tmpl/*</exclude-pattern>
   <exclude-pattern>/templates/*</exclude-pattern>
