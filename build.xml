@@ -40,7 +40,7 @@
 
 	<target name="allphpcs" description="Generate checkstyle.xml using PHP_CodeSniffer">
 		<exec executable="phpcs">
-			<arg value="--report=checkstyle" />
+			<arg value="--report=xml" />
 			<arg value="-p" />
 			<arg value="--report-file=${basedir}/allcheckstyleerrors.xml" />
 			<arg value="--standard=${basedir}/build/phpcs/Joomla" />
