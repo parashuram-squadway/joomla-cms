@@ -325,8 +325,6 @@ class JComponentHelper
 			throw new Exception(JText::_('JLIB_APPLICATION_ERROR_COMPONENT_NOT_FOUND'), 404);
 		}
 
-		$task = $app->input->getString('task');
-
 		// Load common and local language files.
 		$lang->load($option, JPATH_BASE, null, false, false) || $lang->load($option, JPATH_COMPONENT, null, false, false)
 			|| $lang->load($option, JPATH_BASE, $lang->getDefault(), false, false)
@@ -337,6 +335,17 @@ class JComponentHelper
 
 		// Execute the component.
 		$contents = self::executeComponent($path);
+
+		/*
+		 * If the new MVC flag is set, assume a component is written to use the Platform 12.1 MVC Interfaces
+		 * and attempt to execute it by directly executing the controller.
+		 * Note: the entry content.php type file must register the extension to the autoloader or
+		 * this method will fail.
+		 */
+		if (defined('JNEWMVC') && JNEWMVC)
+		{
+			$contents = self::executeNewComponent($option);
+		}
 
 		// Revert the scope
 		$app->scope = $scope;
@@ -359,6 +368,67 @@ class JComponentHelper
 		require_once $path;
 		$contents = ob_get_contents();
 		ob_end_clean();
+		return $contents;
+	}
+
+	/**
+	 * Method to execute a controller in the new MVC paradigm.
+	 *
+	 * @param   string  $component  The component being called
+	 *
+	 * @return  string  The component output
+	 *
+	 * @since   3.1
+	 * @throws  Exception
+	 */
+	protected static function executeNewComponent($component)
+	{
+		$app = JFactory::getApplication();
+
+		// Get the task
+		$task = $app->input->getCmd('task', null);
+
+		if (is_null($task))
+		{
+			$task = 'default';
+		}
+
+		// Strip com_ off the component
+		$base = substr($component, 4);
+
+		// Set the controller class name based on the task
+		$class = ucfirst($base) . 'Controller' . ucfirst($task);
+
+		// Check for the requested controller.
+		if (!class_exists($class) || !is_subclass_of($class, 'JController'))
+		{
+			// See if there's an action class in the libraries if we aren't calling the default task
+			if ($task && $task != 'default')
+			{
+				$class = 'JController' . ucfirst($task);
+			}
+
+			if (!class_exists($class) || !is_subclass_of($class, 'JController'))
+			{
+				// Look for a default controller for the component
+				$class = ucfirst($base) . 'ControllerDefault';
+
+				if (!class_exists($class) || !is_subclass_of($class, 'JController'))
+				{
+					// Nothing found. Panic.
+					throw new Exception(JText::_('JLIB_APPLICATION_ERROR_COMPONENT_NOT_FOUND'), 404);
+				}
+			}
+		}
+
+		// Instantiate the controller
+		$controller = $class($app->input, $app);
+
+		// Execute the controller and get the output
+		ob_start();
+		$contents = $controller->execute();
+		ob_end_clean();
+
 		return $contents;
 	}
 
