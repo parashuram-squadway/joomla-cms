@@ -148,7 +148,8 @@ class UsersModelDebugGroup extends JModelList
 	/**
 	 * Get the group being debugged.
 	 *
-	 * @return  JObject
+	 * @return  object
+	 *
 	 * @since   1.6
 	 */
 	public function getGroup()

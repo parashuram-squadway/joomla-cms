@@ -46,7 +46,7 @@ class MessagesModelConfig extends JModelForm
 	 */
 	public function &getItem()
 	{
-		$item = new JObject;
+		$item = new stdClass;
 
 		$db = $this->getDbo();
 		$query = $db->getQuery(true)
@@ -68,7 +68,7 @@ class MessagesModelConfig extends JModelForm
 
 		foreach ($rows as $row)
 		{
-			$item->set($row->cfg_name, $row->cfg_value);
+			$item->{$row->cfg_name} = $row->cfg_value;
 		}
 
 		$this->preprocessData('com_messages.config', $item);

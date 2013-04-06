@@ -572,13 +572,6 @@ class JInstallerAdapterTemplate extends JAdapterInstance
 		$this->parent->extension->name = $manifest_details['name'];
 		$this->parent->extension->enabled = 1;
 
-		$data = new JObject;
-
-		foreach ($manifest_details as $key => $value)
-		{
-			$data->set($key, $value);
-		}
-
 		$this->parent->extension->params = $this->parent->getParams();
 
 		if ($this->parent->extension->store())

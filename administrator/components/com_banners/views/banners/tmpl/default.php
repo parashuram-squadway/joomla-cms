@@ -22,7 +22,6 @@ $listDirn	= $this->escape($this->state->get('list.direction'));
 $canOrder	= $user->authorise('core.edit.state', 'com_banners.category');
 $archived	= $this->state->get('filter.published') == 2 ? true : false;
 $trashed	= $this->state->get('filter.published') == -2 ? true : false;
-$params		= (isset($this->state->params)) ? $this->state->params : new JObject;
 $saveOrder	= $listOrder == 'ordering';
 if ($saveOrder)
 {

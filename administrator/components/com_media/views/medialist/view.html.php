@@ -73,7 +73,7 @@ class MediaViewMediaList extends JViewLegacy
 		}
 		else
 		{
-			$this->_tmp_folder = new JObject;
+			$this->_tmp_folder = new stdClass;
 		}
 	}
 
@@ -85,7 +85,7 @@ class MediaViewMediaList extends JViewLegacy
 		}
 		else
 		{
-			$this->_tmp_img = new JObject;
+			$this->_tmp_img = new stdClass;
 		}
 	}
 
@@ -97,7 +97,7 @@ class MediaViewMediaList extends JViewLegacy
 		}
 		else
 		{
-			$this->_tmp_doc = new JObject;
+			$this->_tmp_doc = new stdClass;
 		}
 	}
 }

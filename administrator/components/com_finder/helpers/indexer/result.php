@@ -405,7 +405,7 @@ class FinderIndexerResult
 		$branch = preg_replace('#[^\pL\pM\pN\p{Pi}\p{Pf}\'+-.,]+#mui', ' ', $branch);
 
 		// Create the taxonomy node.
-		$node = new JObject;
+		$node = new stdClass;
 		$node->title = $title;
 		$node->state = (int) $state;
 		$node->access = (int) $access;

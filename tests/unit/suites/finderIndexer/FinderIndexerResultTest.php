@@ -196,7 +196,7 @@ class FinderIndexerResultTest extends TestCaseDatabase
 		// Verify our test item is an instance of JObject
 		$this->assertThat(
 			$taxonomy['Test Item'],
-			$this->isInstanceOf('JObject')
+			$this->isInstanceOf('stdClass')
 		);
 	}
 

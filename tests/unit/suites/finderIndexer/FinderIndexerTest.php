@@ -174,7 +174,7 @@ class FinderIndexerTest extends TestCaseDatabase
 	{
 		$this->assertThat(
 			FinderIndexer::getState(),
-			$this->isInstanceOf('JObject')
+			$this->isInstanceOf('stdClass')
 		);
 	}
 
@@ -207,33 +207,6 @@ class FinderIndexerTest extends TestCaseDatabase
 		$this->assertThat(
 			FinderIndexer::getState(),
 			$this->isInstanceOf('JObject')
-		);
-
-		// Restore the database
-		$this->restoreFactoryDatabase();
-	}
-
-	/**
-	 * Tests the setState method with an invalid data object
-	 *
-	 * @return  void
-	 *
-	 * @since   3.0
-	 */
-	public function testSetStateBadData()
-	{
-		// Override the database in this method
-		$this->saveFactoryDatabase();
-
-		// Set up our test object
-		$test = new JRegistry;
-		$test->set('string', 'Testing FinderIndexer::setState()');
-
-		// Attempt to set the state
-		$this->assertThat(
-			FinderIndexer::setState($test),
-			$this->isFalse(),
-			'setState method is not compatible with JRegistry'
 		);
 
 		// Restore the database
