@@ -9,7 +9,7 @@
 
 defined('_JEXEC') or die;
 
-require_once __DIR__ . '/articles.php';
+JLoader::register('ContentControllerArticles', __DIR__ . '/articles.php');
 
 /**
  * @package     Joomla.Administrator
@@ -18,73 +18,66 @@ require_once __DIR__ . '/articles.php';
 class ContentControllerFeatured extends ContentControllerArticles
 {
 	/**
-	 * Removes an item
+	 * The name of the controller
+	 *
+	 * @var    array
+	 * @since  12.2
+	 */
+	protected $name = 'feature';
+
+	/**
+	 * Removes the featured status from an item
 	 */
 	public function delete()
 	{
 		// Check for request forgeries
-		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+		JSession::checkToken() or die(JText::_('JINVALID_TOKEN'));
 
-		$user = JFactory::getUser();
-		$ids  = $this->input->get('cid', array(), 'array');
+		$app = JFactory::getApplication();
 
-		// Access checks.
-		foreach ($ids as $i => $id)
+		// Get items to remove from the request.
+		$cid = $app->input->get('cid', array(), 'array');
+
+		if (!is_array($cid) || count($cid) < 1)
 		{
-			if (!$user->authorise('core.delete', 'com_content.article.'.(int) $id))
-			{
-				// Prune items that you can't delete.
-				unset($ids[$i]);
-				JError::raiseNotice(403, JText::_('JERROR_CORE_DELETE_NOT_PERMITTED'));
-			}
-		}
-
-		if (empty($ids))
-		{
-			JError::raiseWarning(500, JText::_('JERROR_NO_ITEMS_SELECTED'));
+			JLog::add(JText::_($this->text_prefix . '_NO_ITEM_SELECTED'), JLog::WARNING, 'jerror');
 		}
 		else
 		{
+			$user = JFactory::getUser();
+
+			// Access checks.
+			foreach ($cid as $i => $id)
+			{
+				if (!$user->authorise('core.delete', 'com_content.article.' . (int) $id))
+				{
+					// Prune items that you can't delete.
+					unset($cid[$i]);
+					JError::raiseNotice(403, JText::_('JERROR_CORE_DELETE_NOT_PERMITTED'));
+				}
+			}
+
 			// Get the model.
 			$model = $this->getModel();
 
+			// Make sure the item ids are integers
+			jimport('joomla.utilities.arrayhelper');
+			JArrayHelper::toInteger($cid);
+
 			// Remove the items.
-			if (!$model->featured($ids, 0))
+			if ($model->featured($cid))
 			{
-				JError::raiseWarning(500, $model->getError());
+				$this->setMessage(JText::plural('COM_CONTENT_FEATURED_N_ITEMS_DELETED', count($cid)));
+			}
+			else
+			{
+				$this->setMessage($model->getError());
 			}
 		}
 
-		$this->setRedirect('index.php?option=com_content&view=featured');
-	}
-
-	/**
-	 * Method to publish a list of articles.
-	 *
-	 * @return  void
-	 * @since   1.0
-	 */
-	public function publish()
-	{
-		parent::publish();
+		// Invoke the postDelete method to allow for the child class to access the model.
+		$this->postDeleteHook($model, $cid);
 
 		$this->setRedirect('index.php?option=com_content&view=featured');
-	}
-
-	/**
-	 * Method to get a model object, loading it if required.
-	 *
-	 * @param   string  $name    The model name. Optional.
-	 * @param   string  $prefix  The class prefix. Optional.
-	 * @param   array   $config  Configuration array for model. Optional.
-	 *
-	 * @return  object  The model.
-	 *
-	 * @since   1.6
-	 */
-	public function getModel($name = 'Feature', $prefix = 'ContentModel', $config = array('ignore_request' => true))
-	{
-		$model = parent::getModel($name, $prefix, $config);
-		return $model;
 	}
 }

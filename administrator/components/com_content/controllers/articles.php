@@ -19,6 +19,22 @@ defined('_JEXEC') or die;
 class ContentControllerArticles extends JControllerAdmin
 {
 	/**
+	 * The name of the controller
+	 *
+	 * @var    array
+	 * @since  12.2
+	 */
+	protected $name = 'article';
+
+	/**
+	 * The prefix of the models
+	 *
+	 * @var    string
+	 * @since  12.2
+	 */
+	protected $model_prefix = 'ContentModel';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param   array  $config	An optional associative array of configuration settings.
@@ -87,36 +103,4 @@ class ContentControllerArticles extends JControllerAdmin
 
 		$this->setRedirect('index.php?option=com_content&view=articles');
 	}
-
-	/**
-	 * Proxy for getModel.
-	 *
-	 * @param   string	$name	The name of the model.
-	 * @param   string	$prefix	The prefix for the PHP class name.
-	 *
-	 * @return  JModel
-	 * @since   1.6
-	 */
-	public function getModel($name = 'Article', $prefix = 'ContentModel', $config = array('ignore_request' => true))
-	{
-		$model = parent::getModel($name, $prefix, $config);
-
-		return $model;
-	}
-
-	/**
-	 * Function that allows child controller access to model data
-	 * after the item has been deleted.
-	 *
-	 * @param   JModelLegacy  $model  The data model object.
-	 * @param   integer       $ids    The array of ids for items being deleted.
-	 *
-	 * @return  void
-	 *
-	 * @since   12.2
-	 */
-	protected function postDeleteHook(JModelLegacy $model, $ids = null)
-	{
-	}
-
 }

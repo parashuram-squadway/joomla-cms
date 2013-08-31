@@ -99,7 +99,7 @@ class ContentControllerArticle extends JControllerForm
 			if (empty($ownerId) && $recordId)
 			{
 				// Need to do a lookup from the model.
-				$record = $this->getModel()->getItem($recordId);
+				$record = $this->getModel('Article')->getItem($recordId);
 
 				if (empty($record))
 				{
@@ -134,27 +134,11 @@ class ContentControllerArticle extends JControllerForm
 		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
 
 		// Set the model
-		$model = $this->getModel('Article', '', array());
+		$model = $this->getModel();
 
 		// Preset the redirect
 		$this->setRedirect(JRoute::_('index.php?option=com_content&view=articles' . $this->getRedirectToListAppend(), false));
 
 		return parent::batch($model);
-	}
-
-	/**
-	 * Function that allows child controller access to model data after the data has been saved.
-	 *
-	 * @param   JModelLegacy  $model  The data model object.
-	 * @param   array         $validData   The validated data.
-	 *
-	 * @return	void
-	 *
-	 * @since	3.1
-	 */
-	protected function postSaveHook(JModelLegacy $model, $validData = array())
-	{
-
-		return;
 	}
 }
