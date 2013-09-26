@@ -30,7 +30,7 @@ abstract class JExtensionHelper
 	public static function countActivePostinstallMessages($extensionId)
 	{
 		$db = JFactory::getDbo();
-		$query = $db->getQuery()
+		$query = $db->getQuery(true)
 			->select('COUNT(*)')
 			->from($db->quoteName('#__postinstall_messages'))
 			->where($db->quoteName('extension_id') . ' = ' . (int) $extensionId)
