@@ -49,16 +49,7 @@ class CpanelViewCpanel extends JViewLegacy
 		// Display the cpanel modules
 		$this->modules = JModuleHelper::getModules('cpanel');
 
-		// Load the RAD layer and count the number of post-installation messages
-		if (!defined('FOF_INCLUDED'))
-		{
-			require_once JPATH_LIBRARIES . '/fof/include.php';
-		}
-
-		$messages_model = FOFModel::getTmpInstance('Messages', 'PostinstallModel', array('input' => array('eid' => 700)));
-		$messages = $messages_model->getItemList();
-
-		$this->postinstall_message_count = count($messages);
+		$this->postinstall_message_count = JExtensionHelper::countActivePostinstallMessages(700);
 
 		if ($this->postinstall_message_count)
 		{
