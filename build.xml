@@ -44,6 +44,15 @@
 		</exec>
 	</target>
 
+	<target name="travis-phpcs" description="Generate codestyle report using PHP_CodeSniffer for output on Travis-CI">
+		<exec executable="phpcs">
+			<arg value="--report=full" />
+			<arg value="--extensions=php" />
+			<arg value="--standard=${basedir}/build/phpcs/Joomla" />
+			<arg path="${source}" />
+		</exec>
+	</target>
+
 	<target name="pdepend" description="Generate jdepend.xml and software metrics charts using PHP_Depend">
 		<exec executable="pdepend">
 			<arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml" />
