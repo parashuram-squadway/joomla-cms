@@ -36,7 +36,42 @@ class SearchRouter extends JComponentRouterBase
 			unset($query['view']);
 		}
 
-		// Fix up search for URL
+		return $this->encodeSegments($segments);
+	}
+
+	/**
+	 * Decode route segments
+	 *
+	 * @param   array  $segments  An array of route segments
+	 *
+	 * @return  array  Array of decoded route segments
+	 *
+	 * @since   3.3
+	 */
+	protected function decodeSegments($segments)
+	{
+		$total = count($segments);
+
+		for ($i = 0; $i < $total; $i++)
+		{
+			// Urldecode twice because it is encoded twice
+			$segments[$i] = urldecode(urldecode(stripcslashes($segments[$i])));
+		}
+
+		return $segments;
+	}
+
+	/**
+	 * Encode route segments
+	 *
+	 * @param   array  $segments  An array of route segments
+	 *
+	 * @return  array  Array of encoded route segments
+	 *
+	 * @since   3.3
+	 */
+	protected function encodeSegments($segments)
+	{
 		$total = count($segments);
 
 		for ($i = 0; $i < $total; $i++)
@@ -61,14 +96,7 @@ class SearchRouter extends JComponentRouterBase
 	{
 		$vars = array();
 
-		// Fix up search for URL
-		$total = count($segments);
-
-		for ($i = 0; $i < $total; $i++)
-		{
-			// Urldecode twice because it is encoded twice
-			$segments[$i] = urldecode(urldecode(stripcslashes($segments[$i])));
-		}
+		$this->decodeSegments($segments);
 
 		$searchword	= array_shift($segments);
 		$vars['searchword'] = $searchword;

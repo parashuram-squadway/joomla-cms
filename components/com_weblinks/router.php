@@ -156,14 +156,7 @@ class WeblinksRouter extends JComponentRouterBase
 			}
 		}
 
-		$total = count($segments);
-
-		for ($i = 0; $i < $total; $i++)
-		{
-			$segments[$i] = str_replace(':', '-', $segments[$i]);
-		}
-
-		return $segments;
+		return $this->encodeSegments($segments);
 	}
 
 	/**
@@ -177,13 +170,9 @@ class WeblinksRouter extends JComponentRouterBase
 	 */
 	public function parse(&$segments)
 	{
-		$total = count($segments);
 		$vars = array();
 
-		for ($i = 0; $i < $total; $i++)
-		{
-			$segments[$i] = preg_replace('/-/', ':', $segments[$i], 1);
-		}
+		$this->decodeSegments($segments);
 
 		// Get the active menu item.
 		$app = JFactory::getApplication();

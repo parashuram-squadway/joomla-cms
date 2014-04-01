@@ -16,7 +16,7 @@ defined('JPATH_PLATFORM') or die;
  * @subpackage  Component
  * @since       3.3
  */
-class JComponentRouterLegacy implements JComponentRouterInterface
+class JComponentRouterLegacy extends JComponentRouterBase
 {
 	/**
 	 * Name of the component
@@ -39,20 +39,6 @@ class JComponentRouterLegacy implements JComponentRouterInterface
 	}
 
 	/**
-	 * Generic preprocess function for missing or legacy component router
-	 *
-	 * @param   array  $query  An associative array of URL arguments
-	 *
-	 * @return  array  The URL arguments to use to assemble the subsequent URL.
-	 *
-	 * @since   3.3
-	 */
-	public function preprocess($query)
-	{
-		return $query;
-	}
-
-	/**
 	 * Generic build function for missing or legacy component router
 	 *
 	 * @param   array  &$query  An array of URL arguments
@@ -68,12 +54,8 @@ class JComponentRouterLegacy implements JComponentRouterInterface
 		if (function_exists($function))
 		{
 			$segments = $function($query);
-			$total    = count($segments);
 
-			for ($i = 0; $i < $total; $i++)
-			{
-				$segments[$i] = str_replace(':', '-', $segments[$i]);
-			}
+			$segments = $this->encodeSegments($segments);
 
 			return $segments;
 		}
@@ -96,12 +78,7 @@ class JComponentRouterLegacy implements JComponentRouterInterface
 
 		if (function_exists($function))
 		{
-			$total = count($segments);
-
-			for ($i = 0; $i < $total; $i++)
-			{
-				$segments[$i] = preg_replace('/-/', ':', $segments[$i], 1);
-			}
+			$segments = $this->decodeSegments($segments);
 
 			return $function($segments);
 		}
