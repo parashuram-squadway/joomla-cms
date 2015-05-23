@@ -9,6 +9,8 @@
 
 defined('JPATH_PLATFORM') or die;
 
+use Joomla\Profiler\Profiler;
+
 /**
  * Utility class to assist in the process of benchmarking the execution
  * of sections of code to understand where time is being spent.
@@ -88,7 +90,15 @@ class JProfiler
 	{
 		if (empty(self::$instances[$prefix]))
 		{
-			self::$instances[$prefix] = new JProfiler($prefix);
+			// B/C Proxy - The Application profiler uses the Joomla\Profiler\Profiler class
+			if ($prefix == 'Application')
+			{
+				self::$instances[$prefix] = new Profiler($prefix, null, array(), true);
+			}
+			else
+			{
+				self::$instances[$prefix] = new JProfiler($prefix);
+			}
 		}
 
 		return self::$instances[$prefix];

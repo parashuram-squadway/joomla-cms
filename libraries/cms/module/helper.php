@@ -152,12 +152,12 @@ abstract class JModuleHelper
 			return;
 		}
 
+		$app = JFactory::getApplication();
+
 		if (JDEBUG)
 		{
-			JProfiler::getInstance('Application')->mark('beforeRenderModule ' . $module->module . ' (' . $module->title . ')');
+			$app->getProfiler()->mark('beforeRenderModule ' . $module->module . ' (' . $module->title . ')');
 		}
-
-		$app = JFactory::getApplication();
 
 		// Record the scope.
 		$scope = $app->scope;
@@ -260,7 +260,7 @@ abstract class JModuleHelper
 
 		if (JDEBUG)
 		{
-			JProfiler::getInstance('Application')->mark('afterRenderModule ' . $module->module . ' (' . $module->title . ')');
+			$app->getProfiler()->mark('afterRenderModule ' . $module->module . ' (' . $module->title . ')');
 		}
 
 		return $module->content;

@@ -9,6 +9,8 @@
 
 defined('_JEXEC') or die;
 
+JLoader::register('PlgSystemDebugRenderer', __DIR__ . '/renderer.php');
+
 /**
  * Joomla! Debug plugin.
  *
@@ -506,95 +508,10 @@ class PlgSystemDebug extends JPlugin
 	protected function displayProfileInformation()
 	{
 		$html = array();
-
-		$htmlMarks = array();
-
 		$totalTime = 0;
-		$totalMem = 0;
-		$marks = array();
 
-		foreach (JProfiler::getInstance('Application')->getMarks() as $mark)
-		{
-			$totalTime += $mark->time;
-			$totalMem += $mark->memory;
-			$htmlMark = sprintf(
-				JText::_('PLG_DEBUG_TIME') . ': <span class="label label-time">%.1f&nbsp;ms</span> / <span class="label">%.1f&nbsp;ms</span>'
-				. ' ' . JText::_('PLG_DEBUG_MEMORY') . ': <span class="label label-memory">%0.3f MB</span> / <span class="label">%0.2f MB</span>'
-				. ' %s: %s',
-				$mark->time,
-				$mark->totalTime,
-				$mark->memory,
-				$mark->totalMemory,
-				$mark->prefix,
-				$mark->label
-			);
-
-			$marks[] = (object) array(
-				'time' => $mark->time,
-				'memory' => $mark->memory,
-				'html' => $htmlMark,
-				'tip' => $mark->label
-			);
-		}
-
-		$avgTime = $totalTime / count($marks);
-		$avgMem = $totalMem / count($marks);
-
-		foreach ($marks as $mark)
-		{
-			if ($mark->time > $avgTime * 1.5)
-			{
-				$barClass = 'bar-danger';
-				$labelClass = 'label-important';
-			}
-			elseif ($mark->time < $avgTime / 1.5)
-			{
-				$barClass = 'bar-success';
-				$labelClass = 'label-success';
-			}
-			else
-			{
-				$barClass = 'bar-warning';
-				$labelClass = 'label-warning';
-			}
-
-			if ($mark->memory > $avgMem * 1.5)
-			{
-				$barClassMem = 'bar-danger';
-				$labelClassMem = 'label-important';
-			}
-			elseif ($mark->memory < $avgMem / 1.5)
-			{
-				$barClassMem = 'bar-success';
-				$labelClassMem = 'label-success';
-			}
-			else
-			{
-				$barClassMem = 'bar-warning';
-				$labelClassMem = 'label-warning';
-			}
-
-			$bars[] = (object) array(
-				'width' => round($mark->time / ($totalTime / 100), 4),
-				'class' => $barClass,
-				'tip' => $mark->tip
-			);
-
-			$barsMem[] = (object) array(
-				'width' => round($mark->memory / ($totalMem / 100), 4),
-				'class' => $barClassMem,
-				'tip' => $mark->tip
-			);
-
-			$htmlMarks[] = '<div>' . str_replace('label-time', $labelClass, str_replace('label-memory', $labelClassMem, $mark->html)) . '</div>';
-		}
-
-		$html[] = '<h4>' . JText::_('PLG_DEBUG_TIME') . '</h4>';
-		$html[] = $this->renderBars($bars, 'profile');
-		$html[] = '<h4>' . JText::_('PLG_DEBUG_MEMORY') . '</h4>';
-		$html[] = $this->renderBars($barsMem, 'profile');
-
-		$html[] = '<div class="dbg-profile-list">' . implode('', $htmlMarks) . '</div>';
+		$this->app->getProfiler()->setRenderer(new PlgSystemDebugRenderer);
+		$html[] = $this->app->getProfiler()->render();
 
 		$db = JFactory::getDbo();
 
@@ -1083,9 +1000,10 @@ class PlgSystemDebug extends JPlugin
 
 		$totalTime = 0;
 
-		foreach (JProfiler::getInstance('Application')->getMarks() as $mark)
+		/** @var \Joomla\Profiler\ProfilePointInterface $point */
+		foreach ($this->app->getProfiler()->getPoints() as $point)
 		{
-			$totalTime += $mark->time;
+			$totalTime += $point->getTime();
 		}
 
 		if ($totalQueryTime > ($totalTime * 0.25))

@@ -91,6 +91,7 @@ define('JDEBUG', $config->debug);
 unset($config);
 
 // System profiler
+// @deprecated 4.0 - Profiler instantiated by application
 if (JDEBUG)
 {
 	$_PROFILER = JProfiler::getInstance('Application');

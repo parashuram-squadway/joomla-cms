@@ -11,6 +11,7 @@
 	<description>PLG_DEBUG_XML_DESCRIPTION</description>
 	<files>
 		<filename plugin="debug">debug.php</filename>
+		<filename>renderer.php</filename>
 	</files>
 	<languages>
 		<language tag="en-GB">en-GB.plg_system_debug.ini</language>
@@ -185,7 +186,7 @@
 					<option value="1">JYES</option>
 					<option value="0">JNO</option>
 				</field>
-				
+
 				<field name="log-executed-sql" type="radio"
 					class="btn-group btn-group-yesno"
 					default="0"

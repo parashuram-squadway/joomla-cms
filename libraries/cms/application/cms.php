@@ -9,6 +9,7 @@
 
 defined('JPATH_PLATFORM') or die;
 
+use Joomla\Profiler\Profiler;
 use Joomla\Registry\Registry;
 
 /**
@@ -72,7 +73,7 @@ class JApplicationCms extends JApplicationWeb
 	/**
 	 * The profiler instance
 	 *
-	 * @var    JProfiler
+	 * @var    Profiler
 	 * @since  3.2
 	 */
 	protected $profiler = null;
@@ -495,6 +496,24 @@ class JApplicationCms extends JApplicationWeb
 		}
 
 		return $pathway;
+	}
+
+	/**
+	 * Returns the application profiler object.
+	 *
+	 * @return  Profiler
+	 *
+	 * @since   __DEPLOY_VERSION__
+	 * @throws  RuntimeException
+	 */
+	public function getProfiler()
+	{
+		if (!$this->profiler)
+		{
+			throw new RuntimeException('The application profiler is not set.');
+		}
+
+		return $this->profiler;
 	}
 
 	/**
@@ -1065,7 +1084,7 @@ class JApplicationCms extends JApplicationWeb
 		$this->triggerEvent('onAfterRender');
 
 		// Mark afterRender in the profiler.
-		JDEBUG ? $this->profiler->mark('afterRender') : null;
+		JDEBUG ? $this->getProfiler()->mark('afterRender') : null;
 	}
 
 	/**
