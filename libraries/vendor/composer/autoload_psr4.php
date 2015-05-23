@@ -14,6 +14,8 @@ return array(
     'Joomla\\String\\' => array($vendorDir . '/joomla/string/src'),
     'Joomla\\Registry\\Tests\\' => array($vendorDir . '/joomla/registry/Tests'),
     'Joomla\\Registry\\' => array($vendorDir . '/joomla/registry/src'),
+    'Joomla\\Profiler\\Tests\\' => array($vendorDir . '/joomla/profiler/Tests'),
+    'Joomla\\Profiler\\' => array($vendorDir . '/joomla/profiler/src'),
     'Joomla\\Input\\Tests\\' => array($vendorDir . '/joomla/input/Tests'),
     'Joomla\\Input\\' => array($vendorDir . '/joomla/input/src'),
     'Joomla\\Filter\\Tests\\' => array($vendorDir . '/joomla/filter/Tests'),
