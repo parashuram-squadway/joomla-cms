@@ -405,24 +405,7 @@ abstract class JArrayHelper
 	 */
 	public static function sortObjects(&$a, $k, $direction = 1, $caseSensitive = true, $locale = false)
 	{
-		if (!is_array($locale) || !is_array($locale[0]))
-		{
-			$locale = array($locale);
-		}
-
-		self::$sortCase = (array) $caseSensitive;
-		self::$sortDirection = (array) $direction;
-		self::$sortKey = (array) $k;
-		self::$sortLocale = $locale;
-
-		usort($a, array(__CLASS__, '_sortObjects'));
-
-		self::$sortCase = null;
-		self::$sortDirection = null;
-		self::$sortKey = null;
-		self::$sortLocale = null;
-
-		return $a;
+		return ArrayHelper::sortObjects($a, $k, $direction, $caseSensitive, $locale);
 	}
 
 	/**
